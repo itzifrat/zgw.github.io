@@ -2,8 +2,6 @@
 
 **Distance. Deleted.**
 
-![NearWatch Banner](https://via.placeholder.com/1000x300?text=NearWatch+|+Perfect+Sync,+Zero+Lag)
-
 ## 📖 The Story
 
 This project was born out of frustration.
