@@ -34,8 +34,8 @@
         .avatar-option:hover { opacity: 1; transform: scale(1.05); }
         .avatar-option.selected { opacity: 1; transform: scale(1.15); border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
         
-        .tab-btn { @apply flex-1 py-2 text-sm font-medium border-b-2 transition-colors duration-200; }
-        .tab-btn.active { @apply border-blue-500 text-blue-400; }
+        .tab-btn { @apply flex-1 py-3 text-sm font-bold border-b-2 transition-colors duration-200 uppercase tracking-wide; }
+        .tab-btn.active { @apply border-blue-500 text-blue-400 bg-slate-800/30; }
         .tab-btn.inactive { @apply border-transparent text-slate-500 hover:text-slate-300; }
 
         /* Custom Range & Scroll */
@@ -46,6 +46,13 @@
         /* Mobile Sidebar */
         .mobile-sidebar { transition: transform 0.3s ease-in-out; }
         .mobile-sidebar.closed { transform: translateX(100%); }
+        
+        /* Quote Ticker */
+        .quote-fade { animation: fadeInOut 8s infinite; }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(5px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="h-screen w-screen relative flex flex-col">
@@ -62,31 +69,52 @@
             </div>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Profile</label>
-                    <div class="flex gap-3">
-                        <div id="modal-avatar" class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-xl"></div>
-                        <input type="text" id="modal-username" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 text-sm focus:border-blue-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Profile Customization</label>
+                    <div class="flex gap-3 mb-3">
+                        <div id="modal-avatar" class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-2xl border border-slate-600"></div>
+                        <input type="text" id="modal-username" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 text-sm focus:border-blue-500 outline-none" placeholder="Change Name">
+                    </div>
+                    <!-- Avatar Mini Picker -->
+                    <div class="flex gap-2 justify-center bg-slate-800/50 p-2 rounded-lg">
+                        <button onclick="selectAvatar('👾', 'bg-blue-600')" class="text-lg hover:scale-110 transition">👾</button>
+                        <button onclick="selectAvatar('🐱', 'bg-purple-600')" class="text-lg hover:scale-110 transition">🐱</button>
+                        <button onclick="selectAvatar('🤖', 'bg-emerald-600')" class="text-lg hover:scale-110 transition">🤖</button>
+                        <button onclick="selectAvatar('🦊', 'bg-orange-600')" class="text-lg hover:scale-110 transition">🦊</button>
+                        <button onclick="selectAvatar('👻', 'bg-pink-600')" class="text-lg hover:scale-110 transition">👻</button>
                     </div>
                 </div>
                 
-                <div id="host-settings-group" class="hidden">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Moderation (Host)</label>
-                    <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                        <span class="text-sm">Host-Only Controls</span>
-                        <button id="btn-host-only" onclick="toggleHostOnly()" class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors">
-                            <div class="w-3 h-3 bg-white rounded-full absolute top-1 left-1 transition-transform"></div>
-                        </button>
+                <div id="host-settings-group" class="hidden space-y-4">
+                    <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-3">Room Control</label>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm">Lock Room <i data-lucide="lock" class="inline w-3 h-3 text-slate-500 ml-1"></i></span>
+                            <button id="btn-lock-room" onclick="toggleRoomLock()" class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors">
+                                <div class="w-3 h-3 bg-white rounded-full absolute top-1 left-1 transition-transform"></div>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Host-Only Controls</span>
+                            <button id="btn-host-only" onclick="toggleHostOnly()" class="w-10 h-5 rounded-full bg-slate-700 relative transition-colors">
+                                <div class="w-3 h-3 bg-white rounded-full absolute top-1 left-1 transition-transform"></div>
+                            </button>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-1">If enabled, guests cannot play/pause or seek.</p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">AI Integration</label>
-                    <input type="password" id="ai-api-key" placeholder="Paste Gemini API Key here" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:border-purple-500 outline-none">
-                    <p class="text-[10px] text-slate-500 mt-1">Required to use @ai in chat.</p>
+                    <input type="password" id="ai-api-key" placeholder="Paste Gemini API Key" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:border-purple-500 outline-none">
                 </div>
 
-                <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg font-bold text-sm">Save Changes</button>
+                <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg font-bold text-sm shadow-lg">Save Changes</button>
+                
+                <div class="pt-4 border-t border-slate-700 text-center">
+                    <p class="text-[10px] text-slate-500">Version 2.0 • Protected P2P</p>
+                    <p class="text-[10px] text-slate-600 font-medium mt-1">Copyright © Efrat Al Ahad</p>
+                </div>
             </div>
         </div>
     </dialog>
@@ -94,35 +122,74 @@
     <!-- Login View -->
     <div id="login-view" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2525&auto=format&fit=crop')] bg-cover bg-center">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
-        <div class="relative bg-slate-800/90 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 fade-in">
-            <div class="text-center mb-6">
-                <div class="bg-gradient-to-tr from-blue-600 to-purple-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg"><i data-lucide="monitor-play" class="text-white w-8 h-8"></i></div>
-                <h1 class="text-2xl font-bold text-white">ZG WatchTogether</h1>
-                <p class="text-slate-400 text-sm">P2P • Private • Sync</p>
+        
+        <div class="relative bg-slate-900/95 border border-slate-700/50 p-8 rounded-3xl shadow-2xl max-w-md w-full mx-4 fade-in backdrop-blur-xl">
+            <div class="text-center mb-8">
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
+                    <i data-lucide="monitor-play" class="text-white w-8 h-8"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white tracking-tight mb-2">ZG WatchTogether</h1>
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                    <span>P2P Encrypted</span>
+                </div>
             </div>
 
             <!-- Avatar Selector -->
-            <div class="flex justify-center gap-4 mb-6">
-                <div class="avatar-option w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-lg border-2 border-transparent" onclick="selectAvatar('👾', 'bg-blue-600')">👾</div>
-                <div class="avatar-option w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-lg border-2 border-transparent" onclick="selectAvatar('🐱', 'bg-purple-600')">🐱</div>
-                <div class="avatar-option w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-lg border-2 border-transparent" onclick="selectAvatar('🤖', 'bg-emerald-600')">🤖</div>
-                <div class="avatar-option w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-lg border-2 border-transparent" onclick="selectAvatar('🦊', 'bg-orange-600')">🦊</div>
+            <div class="flex justify-center gap-4 mb-8">
+                <div class="avatar-option w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-lg border-2 border-transparent shadow-lg shadow-blue-500/20" onclick="selectAvatar('👾', 'bg-blue-600')">👾</div>
+                <div class="avatar-option w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-lg border-2 border-transparent shadow-lg shadow-purple-500/20" onclick="selectAvatar('🐱', 'bg-purple-600')">🐱</div>
+                <div class="avatar-option w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-lg border-2 border-transparent shadow-lg shadow-emerald-500/20" onclick="selectAvatar('🤖', 'bg-emerald-600')">🤖</div>
+                <div class="avatar-option w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-lg border-2 border-transparent shadow-lg shadow-orange-500/20" onclick="selectAvatar('🦊', 'bg-orange-600')">🦊</div>
             </div>
 
-            <div class="space-y-4">
-                <input type="text" id="username-input" placeholder="Display Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
+            <div class="space-y-6">
+                <!-- Name Input -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-400 uppercase ml-1">Display Name</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="username-input" placeholder="Enter your name" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+                    </div>
+                </div>
                 
-                <div class="flex border-b border-slate-700">
-                    <button onclick="switchMode('create')" id="btn-mode-create" class="tab-btn active">Create Room</button>
-                    <button onclick="switchMode('join')" id="btn-mode-join" class="tab-btn inactive">Join Room</button>
+                <!-- Mode Switcher -->
+                <div class="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/50 rounded-xl border border-slate-800">
+                    <button onclick="switchMode('create')" id="btn-mode-create" class="py-2.5 text-sm font-bold rounded-lg transition-all bg-blue-600 text-white shadow-lg">Create Room</button>
+                    <button onclick="switchMode('join')" id="btn-mode-join" class="py-2.5 text-sm font-bold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800">Join Room</button>
                 </div>
 
-                <div id="join-input-group">
-                    <input type="text" id="room-id-input" placeholder="Custom Room ID (Optional)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    <p class="text-[10px] text-slate-500 mt-1 pl-1" id="id-hint">Leave blank for random ID</p>
+                <!-- Create Room Input -->
+                <div id="create-input-group" class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-400 uppercase ml-1">Room ID (Optional)</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="key" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="create-id-input" placeholder="e.g. movie-night" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-10 pr-12 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+                        <button onclick="fillRandomId()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-blue-400 transition-colors" title="Generate Random ID">
+                            <i data-lucide="dices" class="h-5 w-5"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 pl-1">Leave blank to auto-generate a secure ID.</p>
                 </div>
 
-                <button onclick="handleStart()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition transform active:scale-95" id="action-btn">Create Room</button>
+                <!-- Join Room Input -->
+                <div id="join-input-group" class="hidden space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-400 uppercase ml-1">Room ID to Join</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="link" class="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="join-id-input" placeholder="Enter Host ID" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+                    </div>
+                </div>
+
+                <button onclick="handleStart()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-[0.98] text-sm uppercase tracking-wide flex items-center justify-center gap-2" id="action-btn">
+                    Start Hosting <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
                 <p id="status-msg" class="text-center text-xs text-slate-400 h-4"></p>
             </div>
         </div>
@@ -132,12 +199,20 @@
     <div id="app-view" class="flex flex-col h-full hidden">
         <header class="h-16 border-b border-slate-700 flex items-center justify-between px-4 md:px-6 bg-slate-900 z-20 shrink-0">
             <div class="flex items-center gap-3">
-                <i data-lucide="monitor-play" class="text-blue-500 w-6 h-6"></i>
+                <div class="bg-gradient-to-br from-blue-500 to-purple-600 p-1.5 rounded-lg">
+                    <i data-lucide="monitor-play" class="text-white w-5 h-5"></i>
+                </div>
                 <div class="hidden md:block">
-                    <h1 class="font-bold text-white">ZG WatchTogether</h1>
-                    <p class="text-[10px] text-slate-400 cursor-pointer hover:text-blue-400 transition" onclick="copyId()">
-                        Room ID: <span id="my-peer-id" class="font-mono">...</span> <i data-lucide="copy" class="inline w-3 h-3 ml-1"></i>
-                    </p>
+                    <h1 class="font-bold text-white text-sm">ZG WatchTogether <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded ml-1">v2.0</span></h1>
+                    <div class="flex items-center gap-2">
+                        <p class="text-[10px] text-slate-400 cursor-pointer hover:text-blue-400 transition" onclick="copyId()">
+                            ID: <span id="my-peer-id" class="font-mono">...</span> <i data-lucide="copy" class="inline w-3 h-3 ml-1"></i>
+                        </p>
+                        <!-- Protected Sign -->
+                        <div id="room-locked-indicator" class="hidden flex items-center gap-1 bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
+                            <i data-lucide="lock" class="w-2.5 h-2.5"></i> Protected
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -177,7 +252,7 @@
                 <!-- Video Stage -->
                 <div class="flex-1 overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 to-black p-2 md:p-4 flex flex-col justify-center">
                     <div class="video-wrapper">
-                        <div class="video-container ring-1 ring-white/10">
+                        <div id="video-box" class="video-container ring-1 ring-white/10 group">
                             <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-500 z-10">
                                 <i data-lucide="film" class="w-12 h-12 md:w-16 md:h-16 mb-4 opacity-50"></i>
                                 <h3 class="text-lg md:text-xl font-bold text-white text-center">Ready?</h3>
@@ -192,68 +267,88 @@
                 </div>
 
                 <!-- Advanced Controls Bar -->
-                <div class="w-full bg-slate-900 border-t border-slate-800 px-2 md:px-4 py-2 flex items-center justify-between shrink-0 z-20 text-xs text-slate-300">
-                    <div class="flex items-center gap-2 md:gap-4 overflow-x-auto">
+                <div class="w-full bg-slate-900 border-t border-slate-800 px-2 md:px-4 py-3 flex items-center justify-between shrink-0 z-20 text-xs text-slate-300">
+                    <div class="flex items-center gap-2 md:gap-4 overflow-x-auto flex-1">
+                        
+                        <!-- Rewind/Forward -->
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="seekRelative(-10)" class="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="-10s"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                            <button onclick="seekRelative(10)" class="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="+10s"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>
+                        </div>
+
+                        <div class="w-px h-4 bg-slate-700 shrink-0"></div>
+
+                        <!-- Speed & Subtitle -->
                         <div class="flex items-center gap-2 shrink-0">
-                            <span class="font-bold uppercase text-[10px] text-slate-500">Speed</span>
-                            <select id="speed-select" onchange="changeSpeed(this.value)" class="bg-slate-800 border border-slate-700 rounded px-1 py-0.5 focus:border-blue-500 outline-none">
+                            <select id="speed-select" onchange="changeSpeed(this.value)" class="bg-slate-800 border border-slate-700 rounded px-1 py-0.5 focus:border-blue-500 outline-none text-[10px] w-12">
                                 <option value="0.5">0.5x</option>
                                 <option value="1" selected>1.0x</option>
                                 <option value="1.25">1.25x</option>
                                 <option value="1.5">1.5x</option>
                                 <option value="2">2.0x</option>
                             </select>
+                            <button onclick="document.getElementById('sub-input').click()" class="hover:text-white transition" title="Subtitles"><i data-lucide="captions" class="w-4 h-4"></i></button>
+                            <input type="file" id="sub-input" accept=".vtt,.srt" class="hidden" onchange="handleSubtitle(this)">
                         </div>
-                        <button onclick="document.getElementById('sub-input').click()" class="flex items-center gap-1 hover:text-white transition shrink-0">
-                            <i data-lucide="captions" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Subtitles</span>
-                        </button>
-                        <input type="file" id="sub-input" accept=".vtt,.srt" class="hidden" onchange="handleSubtitle(this)">
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <span id="sync-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="sync-text" class="hidden sm:inline">Synced</span>
-                    </div>
-                </div>
-                
-                <!-- Webcam Strip -->
-                <div class="h-24 md:h-28 bg-slate-950 border-t border-slate-800 flex items-center px-4 gap-3 overflow-x-auto shrink-0">
-                    <div class="relative w-32 md:w-36 h-16 md:h-20 bg-black rounded-lg border border-slate-700 shrink-0 overflow-hidden group">
-                        <video id="my-webcam" autoplay muted playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
-                        <div class="absolute bottom-1 left-1 bg-black/60 px-1.5 rounded text-[9px] text-white font-bold backdrop-blur">YOU</div>
-                        <div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 bg-black/40 transition">
-                            <button onclick="toggleCam()" class="p-1.5 bg-slate-700 rounded-full hover:bg-slate-600 text-white"><i data-lucide="video" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="toggleMic()" class="p-1.5 bg-slate-700 rounded-full hover:bg-slate-600 text-white"><i data-lucide="mic" class="w-3.5 h-3.5"></i></button>
+
+                        <!-- Quotes Ticker -->
+                        <div id="quote-container" class="hidden sm:flex flex-1 justify-center items-center overflow-hidden">
+                            <p id="quote-text" class="text-[10px] text-slate-500 italic truncate max-w-[200px] quote-fade text-center">Watch together. No limits.</p>
                         </div>
                     </div>
-                    <!-- Remote streams container -->
-                    <div id="remote-streams" class="flex gap-3"></div>
+
+                    <div class="flex items-center gap-3 shrink-0 ml-2">
+                        <div class="flex items-center gap-1.5">
+                            <span id="sync-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span id="sync-text" class="hidden sm:inline text-[10px] font-medium tracking-wide text-emerald-500">LIVE</span>
+                        </div>
+                        <button onclick="toggleFullscreen()" class="hover:text-white"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                    </div>
                 </div>
             </div>
 
             <!-- Right: Chat & Sidebar (Responsive) -->
-            <div id="chat-sidebar" class="mobile-sidebar absolute inset-y-0 right-0 w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-30 md:static transform translate-x-full md:translate-x-0 closed">
+            <div id="chat-sidebar" class="fixed inset-y-0 right-0 z-30 w-80 bg-slate-900 border-l border-slate-800 flex flex-col transition-transform duration-300 transform translate-x-full md:translate-x-0 md:static">
                 <!-- Mobile Close Button -->
                 <button onclick="toggleMobileChat()" class="md:hidden absolute top-2 right-2 p-2 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
                 
+                <!-- Sidebar Tabs -->
                 <div class="flex border-b border-slate-800 mt-8 md:mt-0">
-                    <button class="flex-1 py-3 text-xs font-bold uppercase tracking-wide text-blue-400 border-b-2 border-blue-500 bg-slate-800/50">Chat</button>
-                    <button class="flex-1 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Files</button>
+                    <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn active w-1/2">Chat</button>
+                    <button onclick="switchTab('users')" id="tab-users" class="tab-btn inactive w-1/2 flex items-center justify-center gap-1">People <span id="user-count" class="text-[9px] bg-slate-800 px-1.5 py-0.5 rounded-full text-slate-400">1</span></button>
                 </div>
                 
-                <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3">
-                    <div class="text-center text-[10px] text-slate-500 my-2">Room Created</div>
+                <!-- Chat View -->
+                <div id="view-chat" class="flex-1 flex flex-col overflow-hidden">
+                    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <div class="text-center text-[10px] text-slate-500 my-2">Room Created</div>
+                    </div>
+                    <!-- Chat Interactions -->
+                    <div class="p-3 bg-slate-800/50 border-t border-slate-700 relative">
+                        <div class="flex gap-2 mb-2 overflow-x-auto no-scrollbar pb-1">
+                            <button onclick="sendEmoji('👋')" class="text-lg hover:scale-110 transition">👋</button>
+                            <button onclick="sendEmoji('😂')" class="text-lg hover:scale-110 transition">😂</button>
+                            <button onclick="sendEmoji('🔥')" class="text-lg hover:scale-110 transition">🔥</button>
+                            <button onclick="sendEmoji('😮')" class="text-lg hover:scale-110 transition">😮</button>
+                            <button onclick="sendEmoji('❤️')" class="text-lg hover:scale-110 transition">❤️</button>
+                            <div class="w-px h-6 bg-slate-700 mx-1"></div>
+                            <button onclick="askAI('Suggest a movie')" class="whitespace-nowrap text-[10px] bg-purple-500/20 text-purple-300 px-2 rounded-full border border-purple-500/30 hover:bg-purple-500/30 transition">✨ Idea</button>
+                        </div>
+                        <form onsubmit="sendChat(event)" class="relative">
+                            <input id="chat-input" type="text" placeholder="Type or @ai..." class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-3 pr-9 text-xs text-white focus:border-blue-500 outline-none transition shadow-inner">
+                            <button type="submit" class="absolute right-2 top-2 text-slate-400 hover:text-blue-500"><i data-lucide="send-horizontal" class="w-4 h-4"></i></button>
+                        </form>
+                    </div>
                 </div>
 
-                <!-- AI Chips -->
-                <div id="ai-chips" class="px-3 pb-2 flex gap-2 overflow-x-auto hidden">
-                    <button onclick="askAI('Suggest a movie')" class="whitespace-nowrap bg-purple-900/30 border border-purple-500/30 text-purple-300 text-[10px] px-2 py-1 rounded-full hover:bg-purple-900/50 transition">✨ Movie Idea</button>
-                    <button onclick="askAI('Fun fact about this')" class="whitespace-nowrap bg-purple-900/30 border border-purple-500/30 text-purple-300 text-[10px] px-2 py-1 rounded-full hover:bg-purple-900/50 transition">✨ Fun Fact</button>
+                <!-- Users View -->
+                <div id="view-users" class="flex-1 hidden overflow-y-auto p-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Active Users</h3>
+                    <div id="user-list-container" class="space-y-3">
+                        <!-- User Item Template -->
+                        <!-- JS will populate this -->
+                    </div>
                 </div>
-
-                <form onsubmit="sendChat(event)" class="p-3 bg-slate-800/50 border-t border-slate-700 relative">
-                    <input id="chat-input" type="text" placeholder="Type or @ai for bot..." class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-3 pr-9 text-xs text-white focus:border-blue-500 outline-none transition shadow-inner">
-                    <button type="submit" class="absolute right-4 top-4 text-slate-400 hover:text-blue-500"><i data-lucide="send-horizontal" class="w-4 h-4"></i></button>
-                </form>
             </div>
         </main>
     </div>
@@ -265,9 +360,31 @@
         let connections = []; // For Host
         let hostConn = null;  // For Guest
         let isSyncing = false; // Lock to prevent loop
-        let localStream = null;
         let apiKey = ""; // AI Key
         let connTimeout = null;
+        let userList = []; // Array of { id, username, avatar, color, isCoHost }
+        const quotes = [
+            "Watch together. No lag. No limits.", "Tonight, we’re not alone.", "Turn loneliness into togetherness.", 
+            "Distance shouldn’t pause the movie.", "Press play. Feel close.", "Together, even miles apart.", 
+            "Same screen. Same moment.", "Turn distance into togetherness."
+        ];
+        
+        // Sound Effect
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playNotificationSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
 
         const state = {
             mode: 'create', // create | join
@@ -276,6 +393,9 @@
             avatar: '👾',
             color: 'bg-blue-600',
             hostOnly: false,
+            isLocked: false,
+            maxUsers: 10,
+            isCoHost: false, // For local user
             video: { type: null, src: null, time: 0, state: 'paused', speed: 1.0 },
             ytPlayer: null
         };
@@ -284,16 +404,28 @@
         window.onload = () => {
             lucide.createIcons();
             loadProfile();
+            startQuoteTicker();
             
-            // Check URL
             const urlParams = new URLSearchParams(window.location.search);
             if(urlParams.get('join')) {
                 switchMode('join');
-                document.getElementById('room-id-input').value = urlParams.get('join');
+                document.getElementById('join-id-input').value = urlParams.get('join');
             }
-            
-            initWebcam();
         };
+
+        function startQuoteTicker() {
+            let idx = 0;
+            setInterval(() => {
+                idx = (idx + 1) % quotes.length;
+                const el = document.getElementById('quote-text');
+                if(el) {
+                    el.classList.remove('quote-fade');
+                    void el.offsetWidth; // trigger reflow
+                    el.innerText = quotes[idx];
+                    el.classList.add('quote-fade');
+                }
+            }, 8000);
+        }
 
         function loadProfile() {
             const saved = localStorage.getItem('zg_p2p_profile');
@@ -304,7 +436,6 @@
                 selectAvatar(p.avatar, p.color);
                 apiKey = p.apiKey || "";
                 document.getElementById('ai-api-key').value = apiKey;
-                if(apiKey) document.getElementById('ai-chips').classList.remove('hidden');
             }
         }
 
@@ -314,32 +445,36 @@
             const btnCreate = document.getElementById('btn-mode-create');
             const btnJoin = document.getElementById('btn-mode-join');
             const actionBtn = document.getElementById('action-btn');
-            const idInput = document.getElementById('room-id-input');
-            const idHint = document.getElementById('id-hint');
+            const createGroup = document.getElementById('create-input-group');
+            const joinGroup = document.getElementById('join-input-group');
 
             if(mode === 'create') {
-                btnCreate.classList.replace('inactive', 'active');
-                btnJoin.classList.replace('active', 'inactive');
-                actionBtn.innerText = "Start Hosting";
-                actionBtn.classList.replace('bg-emerald-600', 'bg-blue-600');
-                idInput.placeholder = "Custom Room ID (Optional)";
-                idHint.classList.remove('hidden');
+                btnCreate.className = "py-2.5 text-sm font-bold rounded-lg transition-all bg-blue-600 text-white shadow-lg";
+                btnJoin.className = "py-2.5 text-sm font-bold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+                
+                actionBtn.innerHTML = `Start Hosting <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+                createGroup.classList.remove('hidden');
+                joinGroup.classList.add('hidden');
             } else {
-                btnJoin.classList.replace('inactive', 'active');
-                btnCreate.classList.replace('active', 'inactive');
-                actionBtn.innerText = "Join Room";
-                actionBtn.classList.replace('bg-blue-600', 'bg-emerald-600');
-                idInput.placeholder = "Enter Host ID to Join";
-                idHint.classList.add('hidden');
+                btnJoin.className = "py-2.5 text-sm font-bold rounded-lg transition-all bg-blue-600 text-white shadow-lg";
+                btnCreate.className = "py-2.5 text-sm font-bold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+
+                actionBtn.innerHTML = `Join Room <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+                createGroup.classList.add('hidden');
+                joinGroup.classList.remove('hidden');
             }
+            lucide.createIcons();
+        }
+
+        function fillRandomId() {
+            document.getElementById('create-id-input').value = generateId();
         }
 
         function selectAvatar(av, col) {
             state.avatar = av; state.color = col;
             document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-            // Update UI in both login and modal
             document.getElementById('modal-avatar').innerText = av;
-            document.getElementById('modal-avatar').className = `w-10 h-10 rounded-full ${col} flex items-center justify-center text-xl`;
+            document.getElementById('modal-avatar').className = `w-12 h-12 rounded-full ${col} flex items-center justify-center text-2xl border border-slate-600`;
         }
 
         async function handleStart() {
@@ -347,31 +482,28 @@
             if(!name) return toast("Please enter a name", "error");
             state.username = name;
             
-            // Save profile
             localStorage.setItem('zg_p2p_profile', JSON.stringify({
                 name, avatar: state.avatar, color: state.color, apiKey
             }));
 
-            // Button Loading State
             const btn = document.getElementById('action-btn');
             btn.disabled = true;
             btn.innerText = "Connecting...";
             document.getElementById('status-msg').innerText = "Connecting to Network...";
 
-            // ID Logic
-            const inputId = document.getElementById('room-id-input').value.trim().replace(/[^a-zA-Z0-9-_]/g, '');
-
             if(state.mode === 'create') {
-                // If user provided ID, try to use it. Else generate random.
+                const inputId = document.getElementById('create-id-input').value.trim().replace(/[^a-zA-Z0-9-_]/g, '');
                 state.id = inputId || generateId();
-                state.hostOnly = false; // Default
+                state.hostOnly = false;
+                state.isLocked = false;
+                state.isCoHost = true; // Host is always admin
                 initPeer(state.id);
             } else {
+                const inputId = document.getElementById('join-id-input').value.trim().replace(/[^a-zA-Z0-9-_]/g, '');
                 if(!inputId) {
                     resetLoginUI("Enter a Host ID to join.");
                     return;
                 }
-                // Guests need their own ID to connect
                 state.id = generateId(); 
                 initPeer(state.id, inputId);
             }
@@ -387,34 +519,57 @@
 
         // --- PEERJS LOGIC ---
         function initPeer(myId, targetHostId = null) {
-            // Clean ID just in case
             const cleanId = myId.replace(/[^a-zA-Z0-9-_]/g, '');
             peer = new Peer(cleanId, { debug: 1 });
 
             peer.on('open', (id) => {
-                // Connection successful
                 if(targetHostId) {
                     connectToHost(targetHostId);
                 } else {
-                    // I am Host
                     enterApp(id);
                     setStatus("Hosting", "bg-blue-500");
-                    addSystemMsg(`Room Created. Share ID: ${id}`);
+                    addSystemMsg(`Room Created. ID: ${id}`);
                     document.getElementById('host-settings-group').classList.remove('hidden');
+                    // Initialize User List with me
+                    userList = [{ id: id, username: state.username, avatar: state.avatar, color: state.color, isCoHost: true }];
+                    updateUserListUI();
                 }
             });
 
             peer.on('connection', (conn) => {
+                // Host Security Checks
+                if (state.mode === 'create') {
+                    if (state.isLocked) {
+                        conn.on('open', () => {
+                            conn.send({ type: 'error', msg: "Room is Locked." });
+                            setTimeout(() => conn.close(), 500);
+                        });
+                        return;
+                    }
+                    if (connections.length >= state.maxUsers) {
+                        conn.on('open', () => {
+                            conn.send({ type: 'error', msg: "Room is Full." });
+                            setTimeout(() => conn.close(), 500);
+                        });
+                        return;
+                    }
+                }
+
                 connections.push(conn);
                 setupConnection(conn);
                 if(state.mode === 'create') {
-                    addSystemMsg("New user connected. Syncing...");
                     setTimeout(() => {
-                        if(conn.open) conn.send({ 
-                            type: 'sync-full', 
-                            video: state.video,
-                            hostOnly: state.hostOnly
-                        });
+                        if(conn.open) {
+                            // Sync State
+                            conn.send({ 
+                                type: 'sync-full', 
+                                video: state.video,
+                                hostOnly: state.hostOnly,
+                                isLocked: state.isLocked
+                            });
+                            // Sync Users
+                            broadcastUserList(); 
+                        }
                     }, 1000);
                 }
             });
@@ -424,22 +579,17 @@
                 let msg = "Connection Error";
                 if(err.type === 'unavailable-id') msg = "ID already taken. Try another.";
                 if(err.type === 'peer-unavailable') msg = "Host not found.";
-                
                 toast(msg, "error");
                 resetLoginUI(msg);
-                
-                // If we are already in app (rare), reload
-                if(!document.getElementById('login-view').classList.contains('hidden')) {
-                    // stay on login
-                }
             });
         }
 
         function connectToHost(hostId) {
-            hostConn = peer.connect(hostId);
+            hostConn = peer.connect(hostId, {
+                metadata: { username: state.username, avatar: state.avatar, color: state.color }
+            });
             document.getElementById('status-msg').innerText = "Locating Host...";
             
-            // Timeout Check
             connTimeout = setTimeout(() => {
                 if(!hostConn || !hostConn.open) {
                     resetLoginUI("Connection timed out. Is Host online?");
@@ -449,11 +599,10 @@
 
             hostConn.on('open', () => {
                 clearTimeout(connTimeout);
-                enterApp(hostId); // Show UI, display Host ID at top
+                enterApp(hostId);
                 setStatus("Connected", "bg-emerald-500");
                 addSystemMsg("Joined Room!");
                 setupConnection(hostConn);
-                // Update Peer ID display to show who we connected to, not our random ID
                 document.getElementById('my-peer-id').innerText = hostId;
             });
             
@@ -469,13 +618,39 @@
         }
 
         function setupConnection(conn) {
+            if(state.mode === 'create' && conn.metadata) {
+                const { username, avatar, color } = conn.metadata;
+                // Add to list
+                userList.push({ id: conn.peer, username, avatar, color, isCoHost: false });
+                broadcastUserList();
+                
+                const msg = `${username} joined the room`;
+                broadcast({ type: 'system', msg });
+                addSystemMsg(msg);
+                playNotificationSound();
+            }
+
             conn.on('data', (data) => handleData(data, conn));
+            
+            conn.on('close', () => {
+                if(state.mode === 'create') {
+                    connections = connections.filter(c => c !== conn);
+                    const userIdx = userList.findIndex(u => u.id === conn.peer);
+                    if(userIdx !== -1) {
+                        const user = userList[userIdx];
+                        userList.splice(userIdx, 1);
+                        broadcastUserList();
+                        const msg = `${user.username} left the room`;
+                        addSystemMsg(msg);
+                        broadcast({ type: 'system', msg });
+                    }
+                }
+            });
         }
 
         function enterApp(id) {
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
-            // If host, show my ID. If guest, ID is updated in connectToHost
             if(state.mode === 'create') document.getElementById('my-peer-id').innerText = id;
             updateProfileUI();
             initYouTube();
@@ -487,43 +662,123 @@
             el.className = `w-9 h-9 rounded-full ${state.color} flex items-center justify-center font-bold text-lg shadow-inner cursor-pointer`;
         }
 
-        // --- CORE DATA HANDLING ---
-        function handleData(data, senderConn) {
-            if(data.type === 'chat') {
-                addChat(data.user, data.msg, data.avatar, data.color);
+        // --- USER LIST & MODERATION ---
+        function broadcastUserList() {
+            // Send full list to everyone
+            broadcast({ type: 'user-list', list: userList });
+            updateUserListUI(); // Update local
+        }
+
+        function updateUserListUI() {
+            const container = document.getElementById('user-list-container');
+            const countEl = document.getElementById('user-count');
+            container.innerHTML = '';
+            countEl.innerText = userList.length;
+
+            userList.forEach(user => {
+                const isMe = user.id === (state.mode === 'create' ? state.id : peer.id);
+                const role = user.isCoHost ? (user.id === state.id && state.mode === 'create' ? 'HOST' : 'CO-HOST') : 'USER';
+                const roleColor = user.isCoHost ? 'text-blue-400' : 'text-slate-500';
                 
-                // Show badge if chat closed
-                if(document.getElementById('chat-sidebar').classList.contains('closed')) {
-                    document.getElementById('chat-badge').classList.remove('hidden');
+                let controls = '';
+                if(state.mode === 'create' && !isMe) {
+                    controls = `
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="promoteUser('${user.id}')" title="Promote to Co-Host" class="text-blue-400 hover:text-white"><i data-lucide="shield-plus" class="w-4 h-4"></i></button>
+                            <button onclick="kickUser('${user.id}')" title="Kick User" class="text-red-400 hover:text-white"><i data-lucide="user-x" class="w-4 h-4"></i></button>
+                        </div>
+                    `;
                 }
 
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 rounded-lg hover:bg-slate-800/50 group transition";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full ${user.color} flex items-center justify-center text-sm font-bold shadow-sm">${user.avatar}</div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-200 flex items-center gap-1">
+                                ${user.username}
+                                ${isMe ? '<span class="text-[9px] bg-slate-700 px-1 rounded text-slate-400">YOU</span>' : ''}
+                            </p>
+                            <p class="text-[9px] ${roleColor} font-medium">${role}</p>
+                        </div>
+                    </div>
+                    ${controls}
+                `;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function kickUser(userId) {
+            if(state.mode !== 'create') return;
+            const conn = connections.find(c => c.peer === userId);
+            if(conn) {
+                conn.send({ type: 'error', msg: "You have been kicked by the host." });
+                setTimeout(() => conn.close(), 500);
+            }
+        }
+
+        function promoteUser(userId) {
+            if(state.mode !== 'create') return;
+            const user = userList.find(u => u.id === userId);
+            if(user) {
+                user.isCoHost = !user.isCoHost; // Toggle
+                broadcastUserList(); // Update everyone's UI
+                // Notify user specifically
+                const conn = connections.find(c => c.peer === userId);
+                if(conn) conn.send({ type: 'promote', val: user.isCoHost });
+                toast(`Updated permissions for ${user.username}`, 'success');
+            }
+        }
+
+        // --- CORE DATA HANDLING ---
+        function handleData(data, senderConn) {
+            if (data.type === 'error') { alert(data.msg); location.reload(); return; }
+            if (data.type === 'chat') {
+                addChat(data.user, data.msg, data.avatar, data.color);
+                playNotificationSound();
+                if(document.getElementById('chat-sidebar').classList.contains('closed')) document.getElementById('chat-badge').classList.remove('hidden');
+                if(state.mode === 'create') broadcast(data, senderConn);
+            }
+            else if (data.type === 'system') {
+                addSystemMsg(data.msg);
                 if(state.mode === 'create') broadcast(data, senderConn);
             }
             else if (data.type === 'video-action') {
-                // Host-Only Check
+                // If Host-Only enabled, only Host OR Co-Host can send actions
+                const senderIsCoHost = state.mode === 'create' ? false : false; // logic simplified, host validates
                 if(state.mode === 'create' && state.hostOnly && !data.isHost) {
-                    // Ignore non-host actions if restricted
-                    return;
+                    // Check if sender is co-host in our list
+                    const u = userList.find(u => u.id === senderConn.peer);
+                    if(!u || !u.isCoHost) return; 
                 }
-                
                 applyVideoAction(data.action, data.val);
                 if(state.mode === 'create') broadcast(data, senderConn);
             }
             else if (data.type === 'sync-full') {
-                // Initial load
                 state.hostOnly = data.hostOnly;
+                updateLockUI(data.isLocked);
                 if(data.video.type === 'youtube') {
                     document.getElementById('url-input').value = `https://youtu.be/${data.video.src}`;
                     state.video = data.video;
                     loadVideo(true);
                 } else if(data.video.type === 'file') {
-                    addSystemMsg("Host is watching a local file. Please load the same file.");
+                    addSystemMsg("Host is watching a local file. Please load same file.");
                 }
-                // Apply Speed
                 if(data.video.speed) changeSpeed(data.video.speed, true);
             }
             else if (data.type === 'settings') {
                 if(data.key === 'hostOnly') state.hostOnly = data.val;
+                if(data.key === 'isLocked') updateLockUI(data.val);
+            }
+            else if (data.type === 'user-list') {
+                userList = data.list;
+                updateUserListUI();
+            }
+            else if (data.type === 'promote') {
+                state.isCoHost = data.val;
+                toast(state.isCoHost ? "You are now a Co-Host" : "Co-Host removed", "info");
             }
         }
 
@@ -560,7 +815,6 @@
                 } else {
                     state.ytPlayer.loadVideoById(ytId);
                 }
-                
                 if(!isRemote) sendVideoAction('change', { type: 'youtube', src: ytId });
             }
         }
@@ -574,36 +828,32 @@
             activatePlayer('html5');
             const v = document.getElementById('html5-player');
             v.src = url;
-            v.playbackRate = state.video.speed; // Apply current speed
+            v.playbackRate = state.video.speed;
             
-            // Listeners
             v.onplay = () => sendVideoAction('play', v.currentTime);
             v.onpause = () => sendVideoAction('pause', v.currentTime);
             v.onseeked = () => sendVideoAction('seek', v.currentTime);
             
             toast("Local file loaded", "success");
-            // Notify others to expect file mode
             if(state.mode === 'create') broadcast({ type: 'video-action', action: 'change', val: { type: 'file' }});
         }
 
-        // The Fix for Feedback Loops
         function onPlayerStateChange(e) {
-            if(isSyncing) return; // Ignore events triggered by code
+            if(isSyncing) return;
             if(e.data == YT.PlayerState.PLAYING) sendVideoAction('play', state.ytPlayer.getCurrentTime());
             if(e.data == YT.PlayerState.PAUSED) sendVideoAction('pause', state.ytPlayer.getCurrentTime());
         }
 
         function sendVideoAction(action, val) {
             if(isSyncing) return;
-            // Permission check for Guest
-            if(state.mode !== 'create' && state.hostOnly) {
+            // Permission check: Allowed if Host OR Co-Host OR (Not Locked)
+            if(state.mode !== 'create' && state.hostOnly && !state.isCoHost) {
                 toast("Host has locked controls", "error");
                 return;
             }
 
-            const data = { type: 'video-action', action, val, isHost: state.mode === 'create' };
+            const data = { type: 'video-action', action, val, isHost: state.mode === 'create' || state.isCoHost };
             
-            // Update local state record
             if(action === 'play') state.video.state = 'playing';
             if(action === 'pause') state.video.state = 'paused';
             if(action === 'seek') state.video.time = val;
@@ -614,8 +864,7 @@
         }
 
         function applyVideoAction(action, val) {
-            isSyncing = true; // LOCK
-
+            isSyncing = true;
             const yt = state.ytPlayer;
             const h5 = document.getElementById('html5-player');
             
@@ -624,30 +873,37 @@
                     document.getElementById('url-input').value = `https://youtu.be/${val.src}`;
                     loadVideo(true);
                 } else if(val.type === 'file') {
-                    addSystemMsg("Mode changed to File. Load your local file.");
+                    addSystemMsg("Host changed to Local File mode.");
                 }
             }
-            else if(action === 'speed') {
-                changeSpeed(val, true);
-            }
+            else if(action === 'speed') changeSpeed(val, true);
             else if(state.video.type === 'youtube' && yt && yt.getPlayerState) {
-                if(action === 'play') {
-                    if(Math.abs(yt.getCurrentTime() - val) > 1) yt.seekTo(val);
-                    yt.playVideo();
-                }
+                if(action === 'play') { if(Math.abs(yt.getCurrentTime() - val) > 1) yt.seekTo(val); yt.playVideo(); }
                 if(action === 'pause') { yt.seekTo(val); yt.pauseVideo(); }
                 if(action === 'seek') yt.seekTo(val);
             }
             else if(state.video.type === 'file') {
-                if(action === 'play') { 
-                    if(Math.abs(h5.currentTime - val) > 1) h5.currentTime = val;
-                    h5.play().catch(e=>{}); 
-                }
+                if(action === 'play') { if(Math.abs(h5.currentTime - val) > 1) h5.currentTime = val; h5.play().catch(e=>{}); }
                 if(action === 'pause') { h5.pause(); h5.currentTime = val; }
                 if(action === 'seek') h5.currentTime = val;
             }
+            setTimeout(() => { isSyncing = false; }, 500);
+        }
 
-            setTimeout(() => { isSyncing = false; }, 500); // UNLOCK
+        function seekRelative(seconds) {
+            if(state.mode !== 'create' && state.hostOnly && !state.isCoHost) {
+                toast("Host has locked controls", "error");
+                return;
+            }
+            let current = 0;
+            if(state.video.type === 'youtube' && state.ytPlayer) current = state.ytPlayer.getCurrentTime();
+            else if(state.video.type === 'file') current = document.getElementById('html5-player').currentTime;
+            
+            const newTime = Math.max(0, current + seconds);
+            if(state.video.type === 'youtube') state.ytPlayer.seekTo(newTime);
+            else if(state.video.type === 'file') document.getElementById('html5-player').currentTime = newTime;
+            
+            sendVideoAction('seek', newTime);
         }
 
         function activatePlayer(type) {
@@ -663,163 +919,96 @@
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        // --- SUBTITLES & SPEED ---
         function changeSpeed(val, isRemote = false) {
             const speed = parseFloat(val);
             state.video.speed = speed;
             document.getElementById('speed-select').value = speed;
-            
             const h5 = document.getElementById('html5-player');
             h5.playbackRate = speed;
             if(state.ytPlayer && state.ytPlayer.setPlaybackRate) state.ytPlayer.setPlaybackRate(speed);
-            
             if(!isRemote) sendVideoAction('speed', speed);
         }
 
         function handleSubtitle(input) {
             const file = input.files[0];
             if(!file) return;
-            
             const reader = new FileReader();
             reader.onload = (e) => {
                 let content = e.target.result;
-                // SRT to VTT basic conversion
-                if(file.name.endsWith('.srt')) {
-                    content = "WEBVTT\n\n" + content.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
-                }
+                if(file.name.endsWith('.srt')) content = "WEBVTT\n\n" + content.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
                 const blob = new Blob([content], {type: 'text/vtt'});
                 const url = URL.createObjectURL(blob);
-                const track = document.getElementById('player-track');
-                track.src = url;
-                
-                // Force Update
-                const vid = document.getElementById('html5-player');
-                if(vid.textTracks[0]) vid.textTracks[0].mode = 'showing';
-                
+                document.getElementById('player-track').src = url;
+                if(document.getElementById('html5-player').textTracks[0]) document.getElementById('html5-player').textTracks[0].mode = 'showing';
                 toast("Subtitles Loaded", "success");
             };
             reader.readAsText(file);
         }
 
-        // --- AI & CHAT ---
-        async function askAI(query) {
-            const prompt = query || document.getElementById('chat-input').value.replace('@ai', '').trim();
-            if(!prompt) return;
-            if(!apiKey) return toast("API Key required (Settings)", "error");
-
-            sendChat(null, prompt); // Show user query
-            toast("AI Thinking...", "info");
-
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Short movie fun response: " + prompt }] }] })
-                });
-                const data = await res.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Thinking failed.";
-                
-                // Broadcast AI Response as a special chat message
-                const msgData = { type: 'chat', msg: text, user: 'AI', avatar: '✨', color: 'bg-purple-600' };
-                addChat('AI', text, '✨', 'bg-purple-600');
-                if(state.mode === 'create') broadcast(msgData);
-                else if(hostConn) hostConn.send(msgData);
-
-            } catch(e) { toast("AI Error", "error"); }
-        }
-
-        function sendChat(e, manualMsg = null) {
-            if(e) e.preventDefault();
-            const inp = document.getElementById('chat-input');
-            const msg = manualMsg || inp.value.trim();
-            if(!msg) return;
-            
-            if(msg.startsWith('@ai') && !manualMsg) {
-                askAI(msg.replace('@ai', '').trim());
-                inp.value = '';
-                return;
-            }
-
-            const data = { type: 'chat', msg, user: state.username, avatar: state.avatar, color: state.color };
-            addChat(state.username, msg, state.avatar, state.color, true);
-            
-            if(state.mode === 'create') broadcast(data);
-            else if(hostConn) hostConn.send(data);
-            
-            if(inp) inp.value = '';
-        }
-
-        function addChat(user, msg, avatar, color, isMe=false) {
-            const box = document.getElementById('chat-container');
-            const div = document.createElement('div');
-            div.className = `flex gap-2 ${isMe ? 'flex-row-reverse' : ''} animate-fade`;
-            div.innerHTML = `
-                <div class="w-8 h-8 rounded-full ${color} flex items-center justify-center text-xs shrink-0 text-white shadow-sm">${avatar}</div>
-                <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'} p-2 rounded-lg text-sm max-w-[80%] shadow-md">
-                    <p class="text-[10px] opacity-70 mb-0.5 font-bold uppercase">${user}</p>
-                    <p>${msg}</p>
-                </div>
-            `;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
         // --- UTILS & SETTINGS ---
-        function toggleSettings() {
-            const m = document.getElementById('settings-modal');
-            if(m.open) m.close(); else m.showModal();
-        }
-
-        function toggleMobileChat() {
+        function toggleSettings() { const m = document.getElementById('settings-modal'); if(m.open) m.close(); else m.showModal(); }
+        function toggleMobileChat() { 
             const sb = document.getElementById('chat-sidebar');
-            sb.classList.toggle('closed');
-            // Hide badge when opening
-            if(!sb.classList.contains('closed')) document.getElementById('chat-badge').classList.add('hidden');
+            if(sb.classList.contains('translate-x-full')) { sb.classList.remove('translate-x-full'); document.getElementById('chat-badge').classList.add('hidden'); }
+            else sb.classList.add('translate-x-full');
         }
-
+        function toggleFullscreen() {
+            const elem = document.getElementById('video-box');
+            if (!document.fullscreenElement) { elem.requestFullscreen().catch(err => toast("FS Error", "error")); } 
+            else { document.exitFullscreen(); }
+        }
+        function switchTab(tab) {
+            const cChat = document.getElementById('view-chat');
+            const cUsers = document.getElementById('view-users');
+            const tChat = document.getElementById('tab-chat');
+            const tUsers = document.getElementById('tab-users');
+            if(tab === 'chat') {
+                cChat.classList.remove('hidden'); cUsers.classList.add('hidden');
+                tChat.classList.replace('inactive', 'active'); tUsers.classList.replace('active', 'inactive');
+            } else {
+                cChat.classList.add('hidden'); cUsers.classList.remove('hidden');
+                tUsers.classList.replace('inactive', 'active'); tChat.classList.replace('active', 'inactive');
+            }
+        }
+        
         function saveSettings() {
             const name = document.getElementById('modal-username').value;
             apiKey = document.getElementById('ai-api-key').value;
             if(name) state.username = name;
-            
-            // Persist
             localStorage.setItem('zg_p2p_profile', JSON.stringify({ name: state.username, avatar: state.avatar, color: state.color, apiKey }));
-            
-            if(apiKey) document.getElementById('ai-chips').classList.remove('hidden');
-            toggleSettings();
-            toast("Settings Saved", "success");
-        }
-
-        function toggleHostOnly() {
-            if(state.mode !== 'create') return toast("Only Host can change this", "error");
-            state.hostOnly = !state.hostOnly;
-            
-            const btn = document.getElementById('btn-host-only');
-            const knob = btn.firstElementChild;
-            if(state.hostOnly) {
-                btn.classList.add('bg-blue-600'); btn.classList.remove('bg-slate-700'); knob.classList.add('translate-x-5');
-            } else {
-                btn.classList.remove('bg-blue-600'); btn.classList.add('bg-slate-700'); knob.classList.remove('translate-x-5');
+            // Re-sync name to list
+            if(state.mode === 'create') {
+                const me = userList.find(u => u.id === state.id); if(me) me.username = name;
+                broadcastUserList();
+            } else if(hostConn) {
+                // Guests need a way to tell host name changed (Simplified: reconnect or custom msg - skipping for brevity)
             }
-            
-            // Broadcast setting change
+            toggleSettings(); toast("Settings Saved", "success");
+        }
+        function toggleHostOnly() {
+            if(state.mode !== 'create') return toast("Host Only", "error");
+            state.hostOnly = !state.hostOnly;
+            const btn = document.getElementById('btn-host-only'); const knob = btn.firstElementChild;
+            if(state.hostOnly) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-slate-700'); knob.classList.add('translate-x-5'); }
+            else { btn.classList.remove('bg-blue-600'); btn.classList.add('bg-slate-700'); knob.classList.remove('translate-x-5'); }
             broadcast({ type: 'settings', key: 'hostOnly', val: state.hostOnly });
         }
-
-        function setStatus(text, colorClass) {
-            const el = document.getElementById('peer-status');
-            el.innerHTML = `<div class="w-2 h-2 rounded-full ${colorClass} animate-pulse"></div> <span class="hidden sm:inline">${text}</span>`;
+        function toggleRoomLock() {
+            if(state.mode !== 'create') return toast("Host Only", "error");
+            state.isLocked = !state.isLocked;
+            updateLockUI(state.isLocked);
+            const btn = document.getElementById('btn-lock-room'); const knob = btn.firstElementChild;
+            if(state.isLocked) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-slate-700'); knob.classList.add('translate-x-5'); }
+            else { btn.classList.remove('bg-blue-600'); btn.classList.add('bg-slate-700'); knob.classList.remove('translate-x-5'); }
+            broadcast({ type: 'settings', key: 'isLocked', val: state.isLocked });
         }
-
+        function updateLockUI(locked) { const i = document.getElementById('room-locked-indicator'); if(locked) i.classList.remove('hidden'); else i.classList.add('hidden'); }
+        function setStatus(text, colorClass) { document.getElementById('peer-status').innerHTML = `<div class="w-2 h-2 rounded-full ${colorClass} animate-pulse"></div> <span class="hidden sm:inline">${text}</span>`; }
         function copyId() {
             const id = document.getElementById('my-peer-id').innerText;
             if(id === '...') return;
             navigator.clipboard.writeText(id).then(() => toast("Room ID Copied!", "success"));
-            // For convenience, update URL
-            const url = window.location.origin + window.location.pathname + '?join=' + id;
-            console.log("Share:", url);
         }
-
         function toast(msg, type='info') {
             const c = document.getElementById('toast-container');
             const d = document.createElement('div');
@@ -831,7 +1020,6 @@
             c.appendChild(d);
             setTimeout(()=>d.remove(), 3000);
         }
-
         function addSystemMsg(text) {
             const box = document.getElementById('chat-container');
             const div = document.createElement('div');
@@ -840,22 +1028,45 @@
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
-
-        // --- WEBCAM ---
-        async function initWebcam() {
+        
+        // --- AI & CHAT (Bottom) ---
+        async function askAI(query) {
+            const prompt = query || document.getElementById('chat-input').value.replace('@ai', '').trim();
+            if(!prompt) return;
+            if(!apiKey) return toast("API Key required (Settings)", "error");
+            sendChat(null, prompt); toast("AI Thinking...", "info");
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                document.getElementById('my-webcam').srcObject = stream;
-                state.stream = stream;
-            } catch(e) { console.log("Cam error", e); }
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Short fun response: " + prompt }] }] })
+                });
+                const data = await res.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Thinking failed.";
+                const msgData = { type: 'chat', msg: text, user: 'AI', avatar: '✨', color: 'bg-purple-600' };
+                addChat('AI', text, '✨', 'bg-purple-600'); playNotificationSound();
+                if(state.mode === 'create') broadcast(msgData); else if(hostConn) hostConn.send(msgData);
+            } catch(e) { toast("AI Error", "error"); }
         }
-        function toggleCam() {
-            if(state.stream) state.stream.getVideoTracks()[0].enabled = !state.stream.getVideoTracks()[0].enabled;
+        function sendChat(e, manualMsg = null) {
+            if(e) e.preventDefault();
+            const inp = document.getElementById('chat-input');
+            const msg = manualMsg || inp.value.trim();
+            if(!msg) return;
+            if(msg.startsWith('@ai') && !manualMsg) { askAI(msg.replace('@ai', '').trim()); inp.value = ''; return; }
+            const data = { type: 'chat', msg, user: state.username, avatar: state.avatar, color: state.color };
+            addChat(state.username, msg, state.avatar, state.color, true); playNotificationSound();
+            if(state.mode === 'create') broadcast(data); else if(hostConn) hostConn.send(data);
+            if(inp) inp.value = '';
         }
-        function toggleMic() {
-            if(state.stream) state.stream.getAudioTracks()[0].enabled = !state.stream.getAudioTracks()[0].enabled;
+        function sendEmoji(e) { sendChat(null, e); }
+        function addChat(user, msg, avatar, color, isMe=false) {
+            const box = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            div.className = `flex gap-2 ${isMe ? 'flex-row-reverse' : ''} animate-fade`;
+            div.innerHTML = `<div class="w-8 h-8 rounded-full ${color} flex items-center justify-center text-xs shrink-0 text-white shadow-sm">${avatar}</div><div class="${isMe ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'} p-2 rounded-lg text-sm max-w-[80%] shadow-md"><p class="text-[10px] opacity-70 mb-0.5 font-bold uppercase">${user}</p><p>${msg}</p></div>`;
+            box.appendChild(div); box.scrollTop = box.scrollHeight;
         }
-
     </script>
 </body>
 </html>
