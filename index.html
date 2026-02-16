@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZG WatchTogether | P2P Ultimate</title>
+    <title>NearWatch | Watch Together</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -128,10 +128,10 @@
                 <div class="bg-gradient-to-br from-blue-600 to-indigo-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
                     <i data-lucide="monitor-play" class="text-white w-8 h-8"></i>
                 </div>
-                <h1 class="text-3xl font-bold text-white tracking-tight mb-2">ZG WatchTogether</h1>
+                <h1 class="text-3xl font-bold text-white tracking-tight mb-2">NearWatch</h1>
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    <span>P2P Encrypted</span>
+                    <span>Watch Together, Feel Together.</span>
                 </div>
             </div>
 
@@ -203,7 +203,7 @@
                     <i data-lucide="monitor-play" class="text-white w-5 h-5"></i>
                 </div>
                 <div class="hidden md:block">
-                    <h1 class="font-bold text-white text-sm">ZG WatchTogether <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded ml-1">v2.0</span></h1>
+                    <h1 class="font-bold text-white text-sm">NearWatch <span class="text-[10px] bg-slate-800 text-slate-400 px-1 rounded ml-1">v2.0</span></h1>
                     <div class="flex items-center gap-2">
                         <p class="text-[10px] text-slate-400 cursor-pointer hover:text-blue-400 transition" onclick="copyId()">
                             ID: <span id="my-peer-id" class="font-mono">...</span> <i data-lucide="copy" class="inline w-3 h-3 ml-1"></i>
@@ -293,7 +293,7 @@
 
                         <!-- Quotes Ticker -->
                         <div id="quote-container" class="hidden sm:flex flex-1 justify-center items-center overflow-hidden">
-                            <p id="quote-text" class="text-[10px] text-slate-500 italic truncate max-w-[200px] quote-fade text-center">Watch together. No limits.</p>
+                            <p id="quote-text" class="text-sm font-medium text-slate-400 italic truncate max-w-[300px] quote-fade text-center">Watch together. No limits.</p>
                         </div>
                     </div>
 
@@ -824,6 +824,11 @@
             if(!file) return;
             const url = URL.createObjectURL(file);
             
+            // Stop YouTube if playing
+            if(state.ytPlayer && state.ytPlayer.stopVideo) {
+                state.ytPlayer.stopVideo();
+            }
+
             state.video.type = 'file';
             activatePlayer('html5');
             const v = document.getElementById('html5-player');
@@ -834,8 +839,14 @@
             v.onpause = () => sendVideoAction('pause', v.currentTime);
             v.onseeked = () => sendVideoAction('seek', v.currentTime);
             
-            toast("Local file loaded", "success");
-            if(state.mode === 'create') broadcast({ type: 'video-action', action: 'change', val: { type: 'file' }});
+            toast("Local file loaded. Player updated.", "success");
+            
+            if(state.mode === 'create') {
+                broadcast({ type: 'video-action', action: 'change', val: { type: 'file' }});
+            }
+            
+            // Reset input so selecting the same file works again
+            input.value = ''; 
         }
 
         function onPlayerStateChange(e) {
@@ -910,8 +921,16 @@
             document.getElementById('placeholder').classList.add('hidden');
             const h5 = document.getElementById('html5-player');
             const yt = document.getElementById('youtube-player');
-            if(type === 'youtube') { h5.classList.add('hidden'); yt.style.display = 'block'; }
-            else { yt.style.display = 'none'; h5.classList.remove('hidden'); }
+            if(type === 'youtube') { 
+                h5.classList.add('hidden'); 
+                h5.pause(); // Ensure HTML5 stops
+                yt.style.display = 'block'; 
+            }
+            else { 
+                yt.style.display = 'none'; 
+                if(state.ytPlayer && state.ytPlayer.pauseVideo) state.ytPlayer.pauseVideo(); // Ensure YT stops
+                h5.classList.remove('hidden'); 
+            }
         }
 
         function extractYouTubeId(url) {
