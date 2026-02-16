@@ -176,6 +176,7 @@
 
                 <!-- Danger Zone -->
                 <div class="pt-4 border-t border-slate-700">
+                    <button onclick="clearConfig()" class="w-full text-slate-500 hover:text-white text-xs mb-2">Reset App Configuration</button>
                     <button onclick="leaveRoom()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium py-2 rounded-lg border border-red-500/20 transition">
                         Leave Room
                     </button>
@@ -188,8 +189,36 @@
         </div>
     </dialog>
 
+    <!-- ==================== SETUP VIEW (FOR GITHUB DEPLOY) ==================== -->
+    <div id="setup-view" class="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950 text-white hidden">
+        <div class="max-w-md w-full p-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+            <div class="text-center mb-6">
+                <i data-lucide="wrench" class="w-12 h-12 text-blue-500 mx-auto mb-3"></i>
+                <h1 class="text-2xl font-bold">System Setup</h1>
+                <p class="text-slate-400 text-sm mt-2">Connect your backend to start watching.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Firebase Configuration (JSON)</label>
+                    <textarea id="setup-firebase-json" rows="6" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 focus:border-blue-500 outline-none" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}'></textarea>
+                    <p class="text-[10px] text-slate-500 mt-1">Paste the config object from your Firebase Console.</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Gemini API Key (Optional)</label>
+                    <input type="text" id="setup-gemini-key" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-purple-500 outline-none" placeholder="AI Feature Key">
+                </div>
+
+                <button onclick="saveSystemConfig()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition">
+                    Save & Initialize
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== LOGIN VIEW ==================== -->
-    <div id="login-view" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2525&auto=format&fit=crop')] bg-cover bg-center">
+    <div id="login-view" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2525&auto=format&fit=crop')] bg-cover bg-center hidden">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
         
         <div class="relative bg-slate-800/90 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 fade-in">
@@ -460,18 +489,13 @@
     </div>
 
     <script type="module">
-        // --- FIREBASE SETUP ---
-        const firebaseConfig = JSON.parse(__firebase_config); // Provided by environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-zg-app';
-        
+        // --- FIREBASE IMPORTS ---
         const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion } = window.firebaseModules;
         
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const apiKey = ""; // Runtime provided
+        // --- CONFIG & STATE ---
+        let app, auth, db, appId;
+        let apiKey = ""; 
 
-        // --- STATE ---
         const state = {
             user: { uid: null, name: 'Guest', avatar: '👾', color: 'bg-blue-600', isHost: false },
             room: 'lobby',
@@ -485,31 +509,96 @@
             playbackSpeed: 1.0,
             videoUrl: null,
             videoId: null,
-            loginMode: 'join' // 'join' or 'create'
+            loginMode: 'join'
         };
 
-        // --- INIT ---
+        // --- INIT & CONFIG LOADER ---
         window.onload = async () => {
             lucide.createIcons();
             loadProfile();
             
-            // Check URL for room
+            // Handle URL Room Param
             const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('room')) {
-                document.getElementById('room-input').value = urlParams.get('room');
-            }
-            
-            // Auth anonymously first
+            if(urlParams.get('room')) document.getElementById('room-input').value = urlParams.get('room');
+
+            // 1. Try Environment Config (Canvas)
+            let config;
             try {
+                if(typeof __firebase_config !== 'undefined') {
+                    config = JSON.parse(__firebase_config);
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-zg-app';
+                    // We assume apiKey is handled via internal proxy or similar in Canvas, 
+                    // but for deployment we need the user to provide it if they want AI.
+                }
+            } catch(e) { console.log("Env config absent"); }
+
+            // 2. Try Local Storage (Deployment)
+            if(!config) {
+                const stored = localStorage.getItem('zg_sys_config');
+                if(stored) {
+                    const parsed = JSON.parse(stored);
+                    config = parsed.firebase;
+                    apiKey = parsed.gemini || "";
+                    appId = 'deployed-zg-app'; // Use generic ID for deployed instances
+                }
+            }
+
+            // 3. Routing
+            if(config) {
+                initializeSystem(config);
+            } else {
+                // Show Setup Screen
+                document.getElementById('setup-view').classList.remove('hidden');
+                document.getElementById('login-view').classList.add('hidden');
+            }
+        };
+
+        window.saveSystemConfig = () => {
+            const fbText = document.getElementById('setup-firebase-json').value.trim();
+            const gemText = document.getElementById('setup-gemini-key').value.trim();
+            
+            try {
+                const fbConfig = JSON.parse(fbText);
+                const sysConfig = { firebase: fbConfig, gemini: gemText };
+                localStorage.setItem('zg_sys_config', JSON.stringify(sysConfig));
+                
+                // Reload to apply
+                location.reload();
+            } catch(e) {
+                alert("Invalid JSON Format for Firebase Config");
+            }
+        };
+        
+        window.clearConfig = () => {
+            if(confirm("Reset app configuration? You will need to re-enter Firebase keys.")) {
+                localStorage.removeItem('zg_sys_config');
+                location.reload();
+            }
+        };
+
+        async function initializeSystem(config) {
+            try {
+                app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Auth Logic
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (e) {
-                console.error("Auth failed", e);
+                
+                // Show Login
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('login-view').classList.remove('hidden');
+                
+            } catch(e) {
+                console.error("Init Failed", e);
+                alert("Configuration Error. Please Reset Config.");
+                document.getElementById('setup-view').classList.remove('hidden');
             }
-        };
+        }
 
         // --- LOGIN LOGIC ---
         window.setLoginMode = (mode) => {
@@ -528,7 +617,6 @@
                 submitBtn.innerText = "Create Room";
                 submitBtn.className = "w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition-all";
                 helpText.classList.remove('hidden');
-                // Auto generate ID if empty
                 if(!roomInput.value) window.generateRoomId();
             } else {
                 btnJoin.classList.replace('inactive', 'active');
@@ -542,6 +630,8 @@
 
         window.handleLogin = async (e) => {
             e.preventDefault();
+            if(!auth) return; // Guard if config failed
+
             const username = document.getElementById('username-input').value.trim();
             const room = document.getElementById('room-input').value.trim() || 'default-room';
             const avatar = document.getElementById('selected-avatar').value;
@@ -549,7 +639,6 @@
 
             if(!username) return;
 
-            // Create Mode Validation
             let roomName = null;
             if(state.loginMode === 'create') {
                 roomName = document.getElementById('create-room-name').value.trim();
@@ -569,13 +658,10 @@
             state.room = room;
             state.user.uid = auth.currentUser ? auth.currentUser.uid : 'anon-' + Math.random();
 
-            // Persist
             localStorage.setItem('zg_profile', JSON.stringify({ name: username, avatar, color }));
 
-            // Connect to Room (Pass Room Name if creating)
             await joinRoom(room, roomName);
 
-            // UI
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
             updateUIProfile();
@@ -589,11 +675,8 @@
         async function joinRoom(roomId, roomName = null) {
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
             
-            // Initial check/create
             try {
                 const snap = await getDoc(roomRef);
-                
-                // If room doesn't exist, create it (Standard Logic)
                 if (!snap.exists()) {
                     await setDoc(roomRef, {
                         createdAt: Date.now(),
@@ -602,27 +685,20 @@
                         chat: [],
                         settings: { 
                             hostOnly: false,
-                            name: roomName || "Watch Room" // Save the name here
+                            name: roomName || "Watch Room" 
                         }
                     });
                     state.user.isHost = true;
                     if(roomName) {
-                         // Update UI immediately for creator
                          document.getElementById('current-room-display').innerText = roomName;
                          document.getElementById('setting-room-name').value = roomName;
                     }
                 } else {
-                    // Room exists
-                    if(state.loginMode === 'create') {
-                        // Edge case: User tried to create a room that exists. 
-                        // We just join it. Maybe warn? For now, we proceed as join.
-                        window.toast("Room ID exists. Joining...", "info");
-                    }
+                    if(state.loginMode === 'create') window.toast("Room ID exists. Joining...", "info");
                     if(snap.data().host === state.user.uid) state.user.isHost = true;
                 }
             } catch(e) { console.error("Room init error", e); }
 
-            // Listen for changes
             state.unsubscribeRoom = onSnapshot(roomRef, (docSnap) => {
                 if(docSnap.exists()) {
                     const data = docSnap.data();
