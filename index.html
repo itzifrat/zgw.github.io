@@ -613,20 +613,27 @@
 
         function connectToHost(hostId) {
             hostConn = peer.connect(hostId, {
-                metadata: { username: state.username, avatar: state.avatar, color: state.color }
+                metadata: { username: state.username, avatar: state.avatar, color: state.color },
+                reliable: true // Improved reliability
             });
             document.getElementById('status-msg').innerText = "Locating Host...";
             
+            // Increased timeout to 15 seconds to handle network latency
             connTimeout = setTimeout(() => {
                 if(!hostConn || !hostConn.open) {
-                    resetLoginUI("Connection timed out. Host offline?");
-                    if(peer) peer.destroy();
+                    resetLoginUI("Connection timed out. Is Host online?");
+                    if(peer) {
+                        peer.destroy();
+                        peer = null;
+                    }
                 }
-            }, 5000);
+            }, 15000);
 
             hostConn.on('open', () => {
                 clearTimeout(connTimeout);
                 enterApp(hostId);
+                // setStatus("Connected", "bg-emerald-500"); // Removed to use header UI
+                addSystemMsg("Joined Room!");
                 setupConnection(hostConn);
                 document.getElementById('my-peer-id').innerText = hostId;
             });
